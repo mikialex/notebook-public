@@ -26,7 +26,9 @@
   - [场景过滤和剔除](./renderer-engineering/culling-system.md)
   - [如何排查数组访问越界导致的Device lost](./renderer-engineering/debug-device-lost.md)
   - [two-pass gpu 遮挡剔除的细节问题](./renderer-engineering/two-pass-oc.md)
+  - [Reverse-Z 相关问题](./renderer-engineering/reverse-z.md)
   - [渲染器性能优化的迷思](./renderer-engineering/performance-optimization-think.md)
+  - [渲染器工程研究思考](./renderer-engineering/rendering-engineering-think.md)
   - ray-tracing
     - [GPU ray-tracing 的上层框架](./renderer-engineering/ray-tracing/scene-integration.md)
 - 通用工程实践

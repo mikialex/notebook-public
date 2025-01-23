@@ -42,6 +42,16 @@ pub trait IndirectBatchInvocationSource {
 
 multi indirect draw的commandbuffer，是根据draw unit id buffer生成的，生成过程需要在device上寻址mesh相关的数据。device上的剔除实现，剔除的目标draw unit id buffer，剔除过程中需要寻址剔除所需的数据。实现和维护device上的场景数据寻址能力，是indirect 渲染和资源管理的主要工程难点。
 
+## 实现选择
+
+实现选择指的是，给定场景entity，渲染器能够从已有注册实现中提取出渲染这个entity的具体实现。渲染框架能力的扩展性，一方面依赖于场景数据结构的扩展性，另一方面就依赖于渲染器渲染实现的注册机制。这一实现选择和上述的资源寻址比较类似，可以视为是对已注册实现的寻址。这一部分实现先于资源寻址，比资源寻址更加基本和重要，也比较简单。
+
+用户通过实现寻址，来得到自己这种「场景类型」的渲染能力支持。然后在这种能力支持上，做具体渲染的资源寻址，来得到自己这种「场景类型」的具体「实例」的渲染能力支持，然后这个渲染能力支持用来直接表达图形api层面的渲染。
+
+根据用户组装场景来组装渲染能力的设计思想，渲染实现的寻址是从场景结构本身的读取解析出发的。基本形式是访问查询某种动态的类虚表结构。这种虚表可能通过决定场景渲染的场景对象的typeid来访问，也可能简单的通过依次匹配实现。
+
+对于direct draw 和indirect draw，显然这样的实现选择也是同构的。实现选择是一个host only的逻辑，indirect draw的实现选择也只能实现于host端（因为图形api（一般）不支持device切换pipeline），所以 indirect draw的drawlist input，不仅仅要在device上提供entity的迭代能力，还需要直接持有一个host端的entity handle，用来做实现选择。这个entity handle，可以实际上不属于drawlist，但是其选择的实现，必须能够正确的按照需求来渲染这个indirect draw list
+
 ## 在顶层统一渲染接口
 
 因为direct和indirect这两种方式，所需要维护的资源类型不同，渲染方式不同，渲染中的资源寻址虽然同构但是实现完全不同。所以实际工程上，两种模式只能被分开实现，但是在顶层draw unit和draw scene的层面可以提供统一的抽象渲染结构。
@@ -67,8 +77,9 @@ pub trait SceneRenderer: SceneModelRenderer {
 
 // 批量基本单元，可以让用户提供device端数据或者host端数据
 enum SceneModelBatch{
-  Host(Vec<EntityHandle<SceneModelEntity>>),
-  Device(DeviceVec<EntityHandle<SceneModelEntity>>)
+  Host(Vec<EntityHandle<SceneModelEntity>>), 
+  // 后一个entity handle用于上述的实现选择
+  Device(DeviceVec<EntityHandle<SceneModelEntity>>, EntityHandle<SceneModelEntity>)
 }
 
 ```
