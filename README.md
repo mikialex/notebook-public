@@ -18,6 +18,7 @@
   - [场景数据和能力的扩展](./editor-engineering/scene-extension.md)
   - [场景基本单元对象](./editor-engineering/basic-scene-object-model.md)
   - [场景prefab支持](./editor-engineering/prefab.md)
+  - [gpu driven editing](./editor-engineering/gpu-driven-editing.md)
 - 渲染器工程实现研究
   - [EDSL Shader Framework](./renderer-engineering/edsl-shader.md)
   - [Binding group management](./renderer-engineering/binding-management.md)
@@ -25,7 +26,10 @@
   - [indirect和direct rendering的工程实现组织](./renderer-engineering/indirect-direct-rendering.md)
   - [场景过滤和剔除](./renderer-engineering/culling-system.md)
   - [如何排查数组访问越界导致的Device lost](./renderer-engineering/debug-device-lost.md)
+  - [multi draw indirect 降级](./renderer-engineering/multi-indirect-draw-downgrade.md)
   - [two-pass gpu 遮挡剔除的细节问题](./renderer-engineering/two-pass-oc.md)
+  - [Compute shader 错误处理的改进方向](./renderer-engineering/compute-shader-error-handling.md)
+  - [Storage buffer sparse update](./renderer-engineering/storage-buffer-sparse-update.md)
   - [Reverse-Z 相关问题](./renderer-engineering/reverse-z.md)
   - [渲染器性能优化的迷思](./renderer-engineering/performance-optimization-think.md)
   - [渲染器工程研究思考](./renderer-engineering/rendering-engineering-think.md)
