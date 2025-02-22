@@ -145,7 +145,7 @@ pub trait ShaderBindingProvider {
 macro_rules! map_shader_ty {
   ($ty: ty, $shader_ty: ty) => {
     impl ShaderBindingProvider for $ty {
-      type Node = ShaderHandlePtr<$shader_ty>;
+      type Node = ShaderBinding<$shader_ty>;
     }
   };
 }
@@ -176,11 +176,9 @@ map_shader_ty!(GPUCubeArrayTextureView, ShaderTextureCubeArray);
 
 这样的手工保证是易错的，特别是随着项目的变更，可能就会出现不一致的情况。因为从图形api侧来看都是无类型的buffer，所以底层的实现方无法对资源绑定的正确性做完整的validation。这可能使得shader访问完全错误的数据但是却没有任何报错。buffer的定义和使用是非常基础的和广泛的，而排查，维护这样的正确性的工作量和心智负担非常高昂。
 
-解决绑定错误的问题，同理需要对资源进行强类型封装，比如内部存储`MyStruct`类型的无类型`UniformBuffer`，现在会存储于`UniformBuffer<MyStruct>`。然后在构建shader时，和上述「资源容器类型决定IO Node类型」的设计一致：用户通过`UniformBuffer<MyStruct>`的实例或者显式的类型指定来自动的生成 `UniformNode<MyStruct>`. 由此自动的保证「绑定正确类型的无类型buffer到合适位置」。这样的保证是被host类型系统自动检查保证的。
+解决绑定错误的问题，同理需要对资源进行强类型封装，比如内部存储`MyStruct`类型的无类型`UniformBuffer`，现在会存储于`UniformBuffer<MyStruct>`。然后在构建shader时，和上述「资源容器类型决定IO Node类型」的设计一致：用户通过`UniformBuffer<MyStruct>`的实例或者显式的类型指定来自动的生成 `ShaderReadonlyPtrOf<MyStruct>`（具体细节见后文）. 由此自动的保证「绑定正确类型的无类型buffer到合适位置」。这样的保证是被host类型系统自动检查保证的。
 
-解决layout的问题，我们希望让用户给定的数据类型`T`的host layout和device layout自动的保持一致，这样用户可以始终直接在host语言中构造正确layout的T。同时如果用户需要更新T的部分数据，比如struct的一个field，也可以通过host的offset宏直接访问正确的byte offset。为了支持这么做：
-
-首先需要`UniformBuffer<T>`的容器，对`T`有Layout相关的trait bound，比如对于Uniform来说，就会有`Std140`这样的trait。这样就可以避免用户错误的将不符合layout规范的数据类型放入该容器中。这样的trait是unsafe的，除了我们内部会对基本数据类型做实现，我们一般不推荐用户实现这样的trait，而是
+解决layout匹配的问题，我们可以通过对`UniformBuffer<T>`的`<T>`添加和layout相关的静态约束实现。比如对于Uniform来说，就会有`Std140`这样的trait。这样就可以避免用户错误的将不符合layout规范的数据类型放入该容器中。这样的trait是unsafe的，除了我们内部会对基本数据类型做实现，我们一般不推荐用户实现这样的trait，而是
 
 通过宏，让用户来对`MyStruct`的类型定义进行标注。比如下图中的 std140_layout 宏
 
@@ -197,17 +195,17 @@ struct MyStruct {
 
 这个宏会做两件两件事情
 
-- 注入隐藏的padding来保证public field的layout和device是匹配的
-- 为该struct实现layout的trait bound
+- 注入隐藏的padding来保证public field的layout和device是匹配的，使得用户在host端构造出的此数据，其内存布局满足device访问的要求。
+- 为该struct实现layout的`Std140` trait 来标记此数据可以被存储于`UniformBuffer<T>`容器中
 
 由此，我们就彻底的，静态的，自动的保证了数据绑定，layout，出现错误的可能
 
-### 用户定义struct的field access
+### struct 如何实现 field access？
 
 假设上文中的`UniformBuffer<MyStruct>` 正确映射进入shader成为 `UniformNode<MyStruct>` ，那用户该如何访问其field？这个问题是上述代码片段中的ShaderStruct宏解决的。这个宏会自动的生成
 
 - 另一个struct定义，`MyStructShaderInstance`，用户也可以通过`ENode<MyStruct>`指代此struct
-- 会生成`ENode<MyStruct>`和`Node<MyStruct>`的相互转化的实现，分别为expand和construct
+- `ENode<MyStruct>`和`Node<MyStruct>`的相互转化的实现，分别为expand和construct
 
 `MyStructShaderInstance`的结构为
 
@@ -220,7 +218,61 @@ struct MyStructInstance {
 }
 ```
 
-比如用户需要绑定这个buffer，然后access其中roughness field，那么可以写成
+用户可以通过构造`MyStructInstance`，然后compuse出 `Node<MyStruct>`。反之，用户如果已有 `Node<MyStruct>` 也可以expand出`MyStructInstance`。并在`MyStructInstance`直接通过field access来访问子field。如果struct的field是用户定义的其他struct，那么就自动的形成嵌套关系。
+
+### 如何表达pointer semantics
+
+当某buffer被绑定到pipeline后，其仅仅是暴露了其访问地址，用户需要通过某种方式将数据从地址中load出来或者store进去。这种load store方式，是需要用户显式控制的，因为和性能和正确性有很大关系。简单来说比如用户绑定了一个巨型的array，但是只会访问其中若干几个元素，那么load完整的数据是不现实的。又比如我们编写compute shader，其中对带宽，访问pattern，同步控制的细节实现，都要求我们直接表达。
+
+展开而言，edsl是否支持pointer semantics，是其中非常重要的设计考量。如果不支持，那么其计算模型可以简单的规约为DAG，大幅简化了实现。但是在控制流支持和上述的io支持上会遇到非常高难度的设计问题。如果要维持纯粹的DAG设计，基本上需要应用函数式编程的思想。一个方向是直接引入phi节点（SSA的思想其实就是函数式编程的思想），另一个方向是纯粹的采用递归和continuation来表达计算。可以说在shader编程的角度看，这些方向在工程上，实现成本上基本上没有尝试的必要。这样的取舍，意味着edsl的形态就对齐到了ast，而不是图式的ir。
+
+在我们edsl的设计中，为了支持pointer semantic。我们做严格的左右值区分：我们视`Node<T>`是右值，它是直接在计算中可用的。而代表某个地址的，或者持有实际存储地址信息的Node视为左值。左右的区别完全体现在类型系统上，在底层，左右值采用相同的representation。左值上暴露了load store方法来支持右值的修改。
+
+对于shader而言，不同的左值有不同的地址空间，比如一个局部变量(private)，一个全局变量(global)，一个用户绑定的buffer (storage, uniform)，workspace变量。为了简化编程模型，在edsl层面我们静态的只对左值的readonly还是readwrite进行区分。因为我们需要静态的拒绝对uniform类型左值的write方法。
+
+和上述`MyStructShaderInstance`一样，ShaderStruct宏还会生成 `MyStructShaderPtrInstance` 和 `MyStructShaderReadonlyPtrInstance`，来支持左值内部的结构化访问。并且和`ENode<MyStruct>`一样，通过`ShaderReadonlyPtrOf<MyStruct>`来映射`MyStructShaderReadonlyPtrInstance`，通过 `ShaderPtrOf<MyStruct>`来映射`MyStructShaderPtrInstance`。内部的结构化访问的具体上市，是通过`MyStructShaderPtrInstance` 和 `MyStructShaderReadonlyPtrInstance`上暴露的方法实现提供：
+
+```rust
+impl MyStructShaderPtrInstance {
+  pub fn direction(&self) -> ShaderPtrOf<Mat4<f32>>;
+  pub fn sample_count(&self) -> ShaderPtrOf<u32>,
+  pub fn roughness(&self) -> ShaderPtrOf<f32>,
+  pub fn load(&self) -> Node<MyStruct>;
+  pub fn store(&self, v: Node<MyStruct>);
+}
+
+impl MyStructShaderReadonlyPtrInstance {
+  pub fn direction(&self) -> ShaderReadonlyPtrOf<Mat4<f32>>,
+  pub fn sample_count(&self) -> ShaderReadonlyPtrOf<u32>,
+  pub fn roughness(&self) -> ShaderReadonlyPtrOf<f32>,
+  pub fn load(&self) -> Node<MyStruct>;
+}
+```
+
+其中对于`ShaderPtrOf<Mat4<f32>>`这种基本类型，其基本实现上直接提供了load和store方法。所以假设用户持有一个`ShaderPtrOf<MyStruct>` ptr，想要load其中roughness字段，那么就可以通过`ptr.roughness().load()`来实现。如果struct的field是用户定义的其他struct，那么就自动的形成嵌套关系。
+
+框架除了会提供mat，vec等基础primtive的ptr实现，还会提供array和static size array的实现，并正确的将它们和一些常见的host绑定类型进行关联，以实现完整的结构化数据访问的需求。
+
+### 数据绑定和访问的整体流程
+
+比如用户需要绑定某MyStruct uniformbuffer，然后access其中roughness field，那么可以写成
+
+```rust
+let my_struct_instance: UniformBuffer<MyStruct>;
+let roughness = binder.bind(my_struct_instance).roughness().load();
+```
+
+其中每一步的类型变化是
+
+```rust
+let my_struct_instance: UniformBuffer<MyStruct>;
+let my_struct_shader_uniform_ptr: ShaderReaonlyPtrOf<MyStruct> = binder.bind(my_struct_instance);
+
+let my_struct_shader_uniform_roughness_ptr: ShaderReaonlyPtrOf<f32> = my_struct_shader_uniform.roughness();
+let roughness_field_data: Node<f32> = = my_struct_shader_uniform_loaded.load();
+```
+
+当然，用户也可以直接load一整个struct，然后通过expand来访问子field：
 
 ```rust
 let my_struct_instance: UniformBuffer<MyStruct>;
@@ -231,12 +283,10 @@ let roughness = binder.bind(my_struct_instance).load().expand().roughness;
 
 ```rust
 let my_struct_instance: UniformBuffer<MyStruct>;
-let my_struct_shader_uniform: UniformNode<MyStruct> = binder.bind(my_struct_instance);
+let my_struct_shader_uniform: ShaderReaonlyPtrOf<MyStruct> = binder.bind(my_struct_instance);
 
 let my_struct_shader_uniform_loaded: Node<MyStruct> = my_struct_shader_uniform.load();
-
 let my_struct_shader_uniform_loaded_expaned: ENode<MyStruct> = my_struct_shader_uniform_loaded.expand();
-
 let roughness_field_data = my_struct_shader_uniform_loaded_expaned.roughness;
 ```
 
@@ -246,9 +296,9 @@ let roughness_field_data = my_struct_shader_uniform_loaded_expaned.roughness;
 
 - 在创建pipeline时，需要创建 pipeline resource的binding layout
 - 在创建bindgroup时 同样需要 这样的binding layout
-- 在编写shader时，声明binding需要match 上述binding layout
+- 在编写shader时，需要声明这些binding
 
-他们实际上描述的是完全一件事情。但是仅仅是因为跨语言编程的原因，就需要重复编写三遍。这三者必须始终完全对应，在工程和编程体验上是非常糟糕的。在[binding-system](./binding-management.md) 中，我们的一个重要做法就是要让用户完全不考虑binding这一层的存在。所以在shader框架中，我们也不打算让用户感知到binding layout的存在，由此完全避免了上述工程上的灾难。
+这三者实际上描述的是完全一件事情，但是仅仅是因为跨语言编程的原因，就需要重复编写三遍。这三者必须始终完全正确对应，在工程和编程体验上是非常糟糕的。在[binding system](binding-management.md) 中，我们的一个核心设计思想就是要让用户完全不考虑binding这一层的存在。所以在shader框架中，我们也不打算让用户感知到binding layout的存在，由此完全避免了上述工程上的维护成本。
 
 最终shader framework和resource binding组合起来，使得表达渲染代码一般都具备这样的结构：
 

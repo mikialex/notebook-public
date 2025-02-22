@@ -15,7 +15,7 @@
   - 数据建模和状态管理
     - [采用关系型数据库作为富状态应用的数据管理方案](./data-modeling-and-computation/data-modeling/database-is-fundamental.md)
   - 计算表达
-  - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
+    - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
 - 编辑器和场景层工程实现研究
   - [场景数据和能力的扩展](./editor-engineering/scene-extension.md)
   - [场景基本单元对象](./editor-engineering/basic-scene-object-model.md)
