@@ -95,4 +95,4 @@ draw indirect需要填写的draw的range的size是**所有draw command draw rang
 
 ### 直接对command list做二分查找
 
-可能可以per vertex的对draw command size prefix sum做二分查找，来得到drawid信息。但是实际工程上我们没有做相关常识，因为直觉上判断这在性能上可能会有问题。per thread access一个很大的command table相比copy buffer要付出更多带宽成本，而优化相关的带宽实现是复杂的。
+可能可以per vertex的对draw command size prefix sum做二分查找，来得到drawid信息。但是实际工程上我们没有做相关尝试，因为直觉上判断这种做法在性能上可能会有问题。per thread access一个很大的command table相比copy buffer要付出更多带宽成本，而优化相关的带宽实现是复杂的。
