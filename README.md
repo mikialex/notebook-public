@@ -14,6 +14,7 @@
 - 基础数据和计算框架
   - 数据建模和状态管理
     - [采用关系型数据库作为富状态应用的数据管理方案](./data-modeling-and-computation/data-modeling/database-is-fundamental.md)
+    - [数据模型的所有权](./data-modeling-and-computation/data-modeling/database-ownership-model.md)
   - 计算表达
     - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
 - 编辑器和场景层工程实现研究
@@ -41,6 +42,7 @@
 - 通用工程实践
   - [id分配由caller决定](./general-practice/caller-provide-id.md)
   - [组合创建组合](./general-practice/composition-create-composition.md)
+  - [RAII is bad(in some case)](./general-practice/raii-is-bad.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
