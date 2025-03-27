@@ -17,6 +17,7 @@
     - [数据模型的所有权](./data-modeling-and-computation/data-modeling/database-ownership-model.md)
   - 计算表达
     - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
+    - [gpu上的动态workload计算](./data-modeling-and-computation/computation/gpu-dynamic-workload.md)
 - 编辑器和场景层工程实现研究
   - [场景数据和能力的扩展](./editor-engineering/scene-extension.md)
   - [场景基本单元对象](./editor-engineering/basic-scene-object-model.md)
