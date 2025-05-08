@@ -45,6 +45,7 @@
   - [id分配由caller决定](./general-practice/caller-provide-id.md)
   - [组合创建组合](./general-practice/composition-create-composition.md)
   - [RAII is bad(in some case)](./general-practice/raii-is-bad.md)
+  - [hooks pattern](./general-practice/hooks-pattern.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
