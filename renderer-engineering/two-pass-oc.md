@@ -14,7 +14,7 @@
 
 用户屏幕渲染几乎不可能是pot的input，在生成hierarchy depth前，需要向上（保守）取pot，否则会导致在降采样过程中丢失深度数据，导致剔除错误。
 
-问题的核心原因是texture的mipmap size的大小是`full_size >> level_index`计算的，所以每一个非偶数边长的level，到下一层level的过程中都会丢弃一个像素（列）的采样。比如变成为3的level，其下一层level边长为1，而不是2。
+问题的核心原因是texture的mipmap size的大小是`full_size >> level_index`计算的，所以每一个非偶数边长的level，到下一层level的过程中都会丢弃一个像素（列）的采样。比如边长为3的level，其下一层level边长为1，而不是2。
 
 ### depth 可能可以不需要向上取POT
 
