@@ -39,6 +39,7 @@
   - [渲染器性能优化的迷思](./renderer-engineering/performance-optimization-think.md)
   - [渲染器工程研究思考](./renderer-engineering/rendering-engineering-think.md)
   - [host渲染数据释放机制](./renderer-engineering/dispose-host-data.md)
+  - [场景数据虚拟化](./renderer-engineering/scene-virtualization.md)
   - ray-tracing
     - [GPU ray-tracing 的上层框架](./renderer-engineering/ray-tracing/scene-integration.md)
 - 通用工程实践
