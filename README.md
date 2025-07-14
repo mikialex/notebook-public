@@ -29,6 +29,7 @@
   - [Pipeline management](./renderer-engineering/pipeline-management.md)
   - [如何解决Buffer binding count 的平台限制](./renderer-engineering/how-to-workaround-binding-count-limitation.md)
   - [indirect和direct rendering的工程实现组织](./renderer-engineering/indirect-direct-rendering.md)
+  - [改进大场景渲染精度](./renderer-engineering/large-world-precision.md)
   - [场景过滤和剔除](./renderer-engineering/culling-system.md)
   - [如何排查数组访问越界导致的Device lost](./renderer-engineering/debug-device-lost.md)
   - [multi draw indirect 降级](./renderer-engineering/multi-indirect-draw-downgrade.md)
