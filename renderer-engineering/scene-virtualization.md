@@ -32,7 +32,7 @@ weight set一般和相机强关联，所以weightset的计算一般是全量的�
 - weight传播：per scene model  per thread dispatch，atomic add material weight buffer(s, 可能是多种material)的weight table。同理再per material per thread dispatch， atomic add texture weightbuffer
 - 调度器中 weight 排序和已有set 查找是可以在device上高效实现的
 
-基于图形管线本身的基本性质，实际上texture的调度并不会通过上述通过scene model方式进行，原因是通过图形管线我们可以精确的直接得到每一个texel的可见性，活着每一个texture/texture range的可见性，以此来支持传统的virtual texture。可以认为这个流程类似于计算管线的weight计算。同样的，因为不同屏幕像素可以绘制到同一个texture/texel，所以为了更好的调度结果，weight “求和”理论上也是需要的，而实际上weight和是没用的，因为texture的budget一般是足够的，但是去重是必要的，而求和其实就是强化版本的去重。
+基于图形管线本身的基本性质，实际上texture的调度并不会通过上述通过scene model方式进行，原因是通过图形管线我们可以精确的直接得到每一个texel的可见性，或者每一个texture/texture range的可见性，以此来支持传统的virtual texture。可以认为这个流程类似于计算管线的weight计算。同样的，因为不同屏幕像素可以绘制到同一个texture/texel，所以为了更好的调度结果，weight “求和”理论上也是需要的，而实际上weight和是没用的，因为texture的budget一般是足够的，但是去重是必要的，而求和其实就是强化版本的去重。
 
 ## LOD的调度
 
