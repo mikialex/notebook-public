@@ -55,4 +55,5 @@
   - [远程工作的观点](./working/remote-work.md)
   - [或许你不应该将渲染器称之为渲染引擎](./working/language-corrpution.md)
   - [两种软件类型](./misc/two-kind-of-software.md)
-  - [Rust 类型名过长问题(未有效解决)](./misc/rust-huge-debug-symbol.md)
+  - [Rust 类型名过长问题](./misc/rust-huge-debug-symbol.md)
+  - [制度化加班](./working/overtime-work.md)

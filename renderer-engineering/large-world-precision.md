@@ -61,7 +61,7 @@
   - 分别相减然后再加起来
   - 对比单纯的减法，多一个加法一个减法。所以这种做法，对于**原本的任意world space的数据，都是多一个加法一个减法，其计算上的额外开销是可以接受的。**
 
-具体而言。对于所有worldspace的数据，剥离其中position的部分采用两个f32（high percision position， hpt）传递到shader，非position的 roation scale 作为mat3 f32传递到shader。先通过none translation world matrix， 移动local space的geometry顶点到none translation world space，再计算camera的hpt减world的hpt，得到none translation world space到none translation camera space（即我们的渲染空间）的offset，matrix本身是translation rotation scale的组合。的顺序，所以加上这个offset即可。
+具体而言。对于所有worldspace的数据，剥离其中position的部分采用两个f32（high percision translation: hpt）传递到shader，非position的 roation scale 作为mat3 f32传递到shader。先通过none translation world matrix， 移动local space的geometry顶点到none translation world space，再计算camera的hpt减world的hpt，得到none translation world space到none translation camera space（即我们的渲染空间）的offset，matrix本身是translation rotation scale的组合。的顺序，所以加上这个offset即可。
 
 以上的做法也同时需要考虑非node管理的world space position数据并特别处理，比如用以gpu剔除的world space bounding，lighing的数据等。
 
