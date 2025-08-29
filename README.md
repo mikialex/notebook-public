@@ -22,7 +22,7 @@
   - [场景数据和能力的扩展](./editor-engineering/scene-extension.md)
   - [场景基本单元对象](./editor-engineering/basic-scene-object-model.md)
   - [场景prefab支持](./editor-engineering/prefab.md)
-  - [编辑器场景实现基于database的增量保存, debug tracing 和 undo-redo](./editor-engineering/database-incremental-persistency.md)
+  - [基于database的持久化和undo-redo实现](./editor-engineering/database-incremental-persistency.md)
   - [gpu driven editing](./editor-engineering/gpu-driven-editing.md)
 - 渲染器工程实现研究
   - [EDSL Shader Framework](./renderer-engineering/edsl-shader.md)

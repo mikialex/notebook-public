@@ -62,6 +62,26 @@ undo-redo和持久化，在行为和实现上都有重要的相关性。
 - 用以支持编辑的数据，一般是和用户的场景数据是存储在一个db的，因为某些系统是以全局为单位进行处理的（比如希望利用到全局线性id的性质以简化实现和改进访问性能（比如gpu方面的系统））。比如3d编辑器中的gizmo，light-helper等场景物体，这些物体的变更不应该被undo redo和持久化
 - 用户很可能会在一个db内同时维持两个编辑ctx，比如同时打开和编辑两个项目，希望他们具备隔离的持久化和undoredo行为。
 
+#### db scope的隔离性
+
+因为要保证scope change中的外键（引用）信息一定是合法的。scope内的change是self contain的。所以db scope内的场景修改需要应用层保证这样的隔离性：
+
+- 在db scope内创建的entity，必须在db scope内销毁
+- db scope内创建的entity只能reference（外键指向） db scope内创建的entity
+  - db scope外创建的entity可以reference db scope内创建的entity
+
+scope api需要提供debug validation工具来检查上述db scope的隔离性
+
+#### db scope 的其他作用
+
+db scope可以作为某些场景片段的dropper，方便资源管理。
+
+比如有个gltf loader，简单实现是把数据加载到scene里生成一些新的entity，要支持卸载就需要记录哪些entity是来自于这此加载，那么加载的时候套一个scope，就有这个信息了。这种feature对于loader来说是常见的，所以可以复用db scope的能力，就不用给每一种loader都添加“这个loader load了哪些entity方便后面drop”这种实现
+
+#### 持久化可能和undo redo共用同一个db scope
+
+从产品的角度看，持久化的 db scope 和undoredo的db scope一般是相同的。而db scope本身有维护和内存成本，所以持久化和undo-redo要在实现层面上能够复用一个db scope
+
 ### 核心实现
 
 根据上述的推理，我们认为一个被undoredo和持久化共享的底层实现是必要的，这个底层实现是：一个scope的api，用户在每个scope内的场景编辑，能够被分别记录，在scope内用户可以触发checkpoint事件，来flush目前记录的db数据变更。该数据变更集：
@@ -70,31 +90,32 @@ undo-redo和持久化，在行为和实现上都有重要的相关性。
 - 对于undoredo。
   - 实现undo stack和redo stack。stack item内容就是该数据变更集。undo就是revert undo stack top item到redo stack。 redo就是revert redo stack top item到undo stack，任何新的checkpoint事件会flush change并push新的undo stack同时清空redo stack。
 
+## entity handle 的持久化映射
+
+在db中，entity通过 raw_entity_handle 来寻址，entity handle由`(allocation_index, allocation_generation)` 构成。raw_entity_handle实现了entity的在**当前db内存实例的历史**中的identification(uniqueness)，同时支持random access。
+
+持久化id对identification有更高的要求，其要求应该至少是**当前project实例的历史**，这和**当前db内存实例的历史**完全不一样。所以我们需要一种新的id，来在持久化的序列化和反序列化实现中mapping 持久化的entity handle 到实际db的entity的entity handle(raw_entity_handle)。分析以下几种选择：
+
+- 沿用raw_entity_handle作为持久化的entity handle
+  - 如果只支持reload是可以的，但是reload之后就无法编辑，因为raw_entity_handle的生成依赖于db的执行实例的内部状态。而上一次db已经完全不存在了。
+- 采用uuid，完全彻底的unique id。
+  - 这一般是持久化/分布式系统的默认做法。是可行的。因为其提供了最强的保证，保证了任何历史的uniqueness。
+    - 因为这样的保证，所以我们几乎甚至可以通过直接连接两个持久化文件来完成两个场景的合并，因为其中的enitty id不会有冲突
+  - 预计生成和存储的开销较高，如果对持久化系统有debug需求，或者tracing debug需求，编辑，复制，查看冗长的id比较麻烦。
+- 采用一个per project的计数器来作为id 生成器。
+  - 能够避免上述uuid的问题，但是无法实现快速项目/场景合并（等于一个新的project，所以需要重新remapping）
+  - current id并不需要持久化，因为加载时会重放change，重放change会自动计算出当前最新的自增id
+
+id mapping转换的实现细节：
+
+- id 转化是有成本的工作，应该在持久化的背景线程中完成。
+- id转化也要处理外键的change。~~如果某些component虽然不是外键类型，但是实际上有entity引用信息，也需要处理转换工作（比如node的parent）。~~ 因为component中保证不包含外键类型，所以可以忽略component的转换。
+
 ## 其他细节问题
 
 ### 应用层需要确保 editing 修改是独占的
 
 不同的edit featur同时运行会导致的不同的edit change汇总在一个checkpoint里，这显然不是合理的行为。应用层需要保证 editing对场景的修改是独占的。可以引入某种edit权限的锁机制来保证只有一个逻辑上的active editing logic。
-
-### db scope的隔离性
-
-db scope内的场景修改需要应用层保证：
-
-- 在db scope内创建的entity，必须在db scope内销毁
-- db scope内创建的entity只能reference（外键指向） db scope内创建的entity
-  - db scope外创建的entity可以reference db scope内创建的entity
-
-scope api应该提供debug validation工具来检查上述db scope的隔离性
-
-### db scope 的其他作用
-
-db scope可以作为某些场景片段的dropper，方便资源管理。
-
-比如某个外部文件的load，这样不用给每一种loader都添加“这个loader load了哪些entity方便后面drop”这种feature
-
-### 持久化可能和undo redo共用同一个db scope
-
-从产品的角度看，持久化的 db scope 和undoredo的db scope一般是相同的。而db scope本身有维护和内存成本，所以持久化和undo-redo要在实现层面上能够复用一个db scope
 
 ### undo redo的stack本身需要持久化吗？
 
@@ -115,9 +136,9 @@ debug tracing是指对db的数据变更进行录制回放，用以调试和回�
 
 - 该功能不应该明显影响到应用的编辑性能和内存消耗
   - 写磁盘需要异步在其他线程进行，并尽早的完成写出并释放内存
-- 因为持久化是异步的，可能需要提供上层的api，比如fence来在特殊情况下指示实际的持久化是否完成
+- 因为持久化是异步的，可以令触发checkpoint事件的API返回是否实际完成持久化的futures，以便上层业务得知该信息。
   - 文件系统api是没有这样的功能的，估计实现上需要通过定期显式flush实现
 - 因为应用可能会在任何时刻崩溃，所以实际文件写入可能中断在任何一个进度（有待确定是否能放松这样的假设），所以增量数据的反序列化实现及其格式选择要考虑到支持不完整的文件内容
-- 增量持久化的文件也不应该持续无限增长，需要异步的后台定期合并/积分到全量持久化的结果中
+- 持久化的文件也不应该持续无限增长，需要异步的在后台合并压缩
 - 存储层应该采用抽象实现，以后续支持持久化到任何一个存储后端
-  - 比如fs，比如任何协议的网络存储，这方面可能 [opendal](https://opendal.apache.org/)是一个不错的选择
+  - 比如fs，比如任何协议的网络存储，这方面可能 [opendal](https://opendal.apache.org/) 是一个不错的选择
