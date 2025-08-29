@@ -111,6 +111,34 @@ id mapping转换的实现细节：
 - id 转化是有成本的工作，应该在持久化的背景线程中完成。
 - id转化也要处理外键的change。~~如果某些component虽然不是外键类型，但是实际上有entity引用信息，也需要处理转换工作（比如node的parent）。~~ 因为component中保证不包含外键类型，所以可以忽略component的转换。
 
+## Hydration
+
+Hydration这个问题比较抽象，我不确定有什么更好的名字，采用这个名字是因为这个问题和React的hydration是相似。
+
+### 一个具体的例子
+
+假设我要持久化一个scene以及下面若干scene model，并且出于方便起见我使用代码自动的创建这个scene，只让用户来在上面attach scene model。
+
+根据上文scope的隔离性要求（db scope内创建的entity只能reference db scope内创建的entity），那么这些scene model的scene reference必须指向scope内创建的scene，所以scene必须在scope内创建。所以相当于这个scope内有个内存中一直存在的scene变量，后面创建的scenemodel都attach这个scene。
+
+在首次运行时，因为之前没有任何持久化结果，那么就应该从db内直接创建新的scene。而在后续的重新打开应用的情况下，这个scene entity会从之前持久化结果内自动的复活在db内。那么这时候，就应该采用这个复活的scene。
+
+那么问题是：我怎么找到这个复活的scene的handle是哪一个？如果我之前创建了多个scene，重新加载后读回的可能是多个handle，那么哪个重建的handle是哪个代码内之前create的scene？
+
+### 可能的解法
+
+（注： 这里的做法的可行性和内容有待原型实现结果予以补充）
+
+如果被持久化的db数据，其中的一些entity，被运行时的变量引用，那么需要保证每次程序加载，这个变量都引用的是一个entity数据。持久化结果重新加载后，将这样的变量，重新正确绑定到由持久化重建的handle的过程，称之为 Hydration。
+
+如果没有这样的程序变量，那么就不需要这个过程。如果避免这个需求，那么可以不用考虑这样的复杂度。但是一般来说，比如上述的scene的case，表达数据的挂载点还是常见的，所以必要的支持是需要考虑的。
+
+实现hydration，需要持久化时一同保存变量的identity对handle的mapping。hydration时查询此信息来完成重建。这个mapping和db数据一样，采用增量的方式进行持久化。
+
+变量的identity简单处理可以通过设置label来进行标记。更加完善的做法可和hooks一样采用scoping的track_caller的callsite信息。但这种做法可能不适合，因为持久化的文件是要长期存储考虑兼容性的，那么call site是非常不稳定的，采用callsite，虽然简化了记录变量id的做法，但是无法实现长期的格式兼容性。
+
+react的 hydration没有这样单独的mapping信息，是因为dom本身就是和state tree匹配的结构化的数据，不仅包含了普通数据，还隐含了这样的mapping。所以可以直接通过tree diff的方式来找到映射。而db的数据缺少这样的业务逻辑的state tree结构，所以需要存储和使用必要的额外信息。
+
 ## 其他细节问题
 
 ### 应用层需要确保 editing 修改是独占的
