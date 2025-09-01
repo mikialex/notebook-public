@@ -66,11 +66,13 @@ undo-redo和持久化，在行为和实现上都有重要的相关性。
 
 因为要保证scope change中的外键（引用）信息一定是合法的。scope内的change是self contain的。所以db scope内的场景修改需要应用层保证这样的隔离性：
 
-- 在db scope内创建的entity，必须在db scope内销毁
+- 在db scope内创建的entity，必须在db scope内销毁和修改 (A)
 - db scope内创建的entity只能reference（外键指向） db scope内创建的entity
   - db scope外创建的entity可以reference db scope内创建的entity
 
-scope api需要提供debug validation工具来检查上述db scope的隔离性
+scope api需要提供debug validation工具来检查上述db scope的隔离性。
+
+(A): 对于采用hooks api来说，这样的隔离保证是容易实现的。因为其资源/数据有明确的scope的范围，只要保证该范围在db scope内即可。
 
 #### db scope 的其他作用
 
@@ -141,9 +143,55 @@ react的 hydration没有这样单独的mapping信息，是因为dom本身就是�
 
 ## 其他细节问题
 
-### 应用层需要确保 editing 修改是独占的
+### 持久化和undoredo只应用于纯业务的数据
 
-不同的edit featur同时运行会导致的不同的edit change汇总在一个checkpoint里，这显然不是合理的行为。应用层需要保证 editing对场景的修改是独占的。可以引入某种edit权限的锁机制来保证只有一个逻辑上的active editing logic。
+以camera为例，为了改进3d编辑体验，用户的相机操作和视角切换可能是具有动画平滑效果。实现这样的效果，会持续的修改相机参数，而这么做会导致破坏整个持久化和undoredo的行为，因为相机参数的连续变化总是被interleave进其他场景编辑中。
+
+解决这个问题，我们需要分离用于动画渲染的camera和用于持久化的业务camera，动画的camera采用现有的连续交互逻辑，同时在必要时同步到用于持久化的camera触发checkpoint。
+
+同理，支持 animation system，比如gltf的animation，具体来说比如参数驱动的node transform动画，可以添加一个新的render node component，用以综合origin node component和来自aniamtion系统的override。这个render node component取代了origin node component来作为实际的渲染input，但是并不会执行持久化。
+
+database作为通用的数据容器，其中并不一定要只存储渲染相关的场景数据，也可以直接存储较为上层的业务数据，渲染的场景数据甚至可能只是上层业务数据的derive，总之原则就是分离动态交互的次生数据和真正的原始业务数据，只对原始业务数据做持久化来避免动态交互的影响。
+
+### 两种不同的change记录方法
+
+比如某个工具，其作用总是将x的坐标position+2， 假设position原本位于1，那么这个工具运行后，position变为3.
+
+- 记录new value，可以将change，记录为x's position change to 3 （现有逻辑）
+- 记录value delta，也可将change，记录为x's position increase 2
+
+哪一种记录change的做法更好？
+
+我认为记录new value是正确的做法，因为
+
+记录value delta意味着**试图在mutation中记录初值无关的mutation算法**，对于上述position来说，这个算法就是加减法，但是对于通用的情况，其算法本身可以是任意的，而通用实现是必要的，因为加减法是trivral的。这么做会引入非常多的复杂度和可能性。mutation如果encode的不是change结果，而是实现change的算法，意味着序列化格式其实得是executable的，其实就是一种script。记录new value的做法其实只是记录value delta的特例，因为相当于mutation的算法是设置value的绝对值，不包含实际的计算，即实际上没有任何算法被显式或者隐式的被encode。
+
+这两者的区别就是我们是否允许（需要）记录mutation的算法，而不是记录mutation本身？
+
+采用delta value的优势是，delta value记录的是change的transformation本身的信息，可以避免依赖初始状态， 即相对值和绝对值的区别。使得这些change可以被回放到任何初始状态的对象上。
+
+我认为从tools/editing的角度看，有三个问题需要考虑。
+
+- 用户是否需要从editing tools来生成自定义宏/脚本的功能？
+- 用户是否总是希望生成的宏/脚本能够使用在多种input下？
+  - 我可以还是只记录绝对change，并且生成宏让用户使用（只处理绝对的批量化的工作）
+  - 我可以还是只记录绝对change，生成绝对change的脚本，让用户修改脚本来支持相对的case
+- 现有的editing tools是否大多数能够生成有意义的mutation的算法，而不是mutation本身？
+  - 即现有的工具能够生成相对change（change算法）的脚本/宏
+
+我一般认为同时满足，特别是第三点，是非常少见的。同时，要支持这样的能力，其开发成本是极其高昂的，所以记录value delta/算法是不合理的做法。
+
+补充：对于undoredo来说，value delta的算法还需要是可逆的，如果某些算法做不到或者无法以合理的成本做到这一点，那么就只能记录算法output的绝对change。
+
+### 业务数据本身可以是“可编程”的
+
+一个场景是，假设我有个图片，需要做高斯模糊，那么持久化和undo redo应该怎么做？
+
+一个想法是，假设有上文的delta value的change 记录，那么我们可以将高斯模糊及其参数打包成一个change的desc。这样我根本不用记录change后的图。且不论delta value这个做法本身不应该实现的问题，支持undo该怎么做？用一个反卷积的计算来表达吗？
+
+对于这种情况，应该认为原始图片和高斯模糊运算都是场景的业务数据，而模糊的结果是场景业务数据的derive数据，就和渲染的结果是一个性质。这样是否开启高斯模糊就变成添加/删除一个effect entity的问题。
+
+业务数据本身可以是一个可编程的结构，比如一个2d的场景上配置各种嵌套的effect。应该对「计算表达式」本身进行持久化/undoredo，而不是计算过程或者计算结果来做。
 
 ### undo redo的stack本身需要持久化吗？
 
