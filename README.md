@@ -9,6 +9,8 @@
 - 不再考虑美学，形式上的细节，进一步的回归内容。
 - 试图维护一些成体系的内容，注重自洽和时效
 
+本项目不保证文件和路径名的稳定，为了保证链接始终有效，请使用包含git hash的url。
+
 ## Table of Contents
 
 - 基础数据和计算框架
@@ -49,6 +51,7 @@
   - [组合创建组合](./general-practice/composition-create-composition.md)
   - [RAII is bad(in some case)](./general-practice/raii-is-bad.md)
   - [hooks pattern](./general-practice/hooks-pattern.md)
+  - [IO组件实现的质量标准](./general-practice/better-io-impl.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
