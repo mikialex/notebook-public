@@ -53,6 +53,7 @@
   - [hooks pattern](./general-practice/hooks-pattern.md)
   - [IO组件实现的质量标准](./general-practice/better-io-impl.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
+  - [Semantic log level 规范](./general-practice/semantic-log-level.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
 - 其他
