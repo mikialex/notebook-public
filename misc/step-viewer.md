@@ -29,7 +29,7 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
   - 一些简单曲面这样的lowing是可以简单计算/解析的计算的。对于nurbs曲面。fox的做法是对每一个nurbs曲面预计算8 x 8的离散点，然后找到最近的一个点开始用牛顿法来求解。。
 - 投影到参数空间后，这些点集内部（其实fox的实现很粗糙，根本没有保证在border的内部，如果有问题直接删了重试罢了）插入一些点，这些点叫做steiner_point。很显然是要插入这些点的，不然这个曲面内部根本没有任何三角化。插入后在参数空间做带border限制的Delaunay三角化。然后在转化到世界空间的mesh
 
-## 3d版vello的可能性
+## 3d版vello的可行性
 
 > 注：仅是初步的不完整研究，其可行性也是不确定的，内容会随时更新调整。
 
@@ -121,8 +121,14 @@ Polygon Triangulation](https://www.cs.hiroshima-u.ac.jp/cs/_media/triangulation_
 
 [A three-dimensional parametric mesher with surface boundary-layer capability](https://www.sciencedirect.com/science/article/pii/S0021999114002447)
 
+## 大幅改进复杂场景的渲染性能和显示效果的其他方案
+
+另外一种做法，就是生成足够高精度的mesh，然后全部预处理成mesh lod graph，做好虚拟化。
+
 ## 其他step的有用资源
 
 [grabcad](https://grabcad.com/library?page=1&time=all_time&sort=most_liked)是一个cad file share的网站，上面有很多step格式的文件可以用来测试。
 
 [step-tool](https://www.steptools.com/)是一个该文件格式相关的非官方网站，上面有step spec的细节（官方的iso文档几乎下载不到，购买的话价格非常贵）
+
+另一个step and express rust parser[ruststep](https://github.com/ricosjp/ruststep)

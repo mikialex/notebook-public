@@ -45,7 +45,7 @@ dx12行为上是支持nonezero-first-instance，只是其instanceid是相对的�
 
 gpu driven前stage（比如剔除）得到的结果是draw command，可以简单认为draw command描述了一个mesh buffer的range（offset+size）。
 
-### 数据准备
+### 方法1 通过展开per vertex drawid buffer来实现降级
 
 #### 整体的draw size计算
 
@@ -93,6 +93,8 @@ draw indirect需要填写的draw的range的size是**所有draw command draw rang
 
 用compute shader来合并buffer，合并buffer的写入，类似做法在[storage-buffer-sparse-update](storage-buffer-sparse-update.md)一文中也有涉及。
 
-### 直接对command list做二分查找
+### 方法2 直接对command list做二分查找
 
-可能可以per vertex的对draw command size prefix sum做二分查找，来得到drawid信息。但是实际工程上我们没有做相关尝试，因为直觉上判断这种做法在性能上可能会有问题。per thread access一个很大的command table相比copy buffer要付出更多带宽成本，而优化相关的带宽实现是复杂的。
+可以per vertex的对draw command size prefix sum做二分查找，来得到drawid信息。这个做法实现非常简单。但可能比上述方法运行成本更好。因为per vertex access一个很大的command table相比copy buffer要付出更多带宽成本，而优化相关的带宽实现是复杂的。
+
+实际方案中我采用了该方法做midc降级（因为实现简单容易验证）。我在某3070平台测试，该方法在一个典型的场景，如bistro 350w面 1500 drawcall 大约会导致vertex shader成本上升约一倍(0.3ms -> 0.6ms)。有趣的是，对于较大drawcall的场景，但是每个draw内容很小的情况，比如23000drawcall的类bim场景，使用这个降级反而相比原生的midc要快一倍。
