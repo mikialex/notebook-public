@@ -44,6 +44,7 @@
   - [渲染器工程研究思考](./renderer-engineering/rendering-engineering-think.md)
   - [host渲染数据释放机制](./renderer-engineering/dispose-host-data.md)
   - [场景数据虚拟化](./renderer-engineering/scene-virtualization.md)
+  - [渲染器 wasm thread 支持问题](./renderer-engineering/renderer-wasm-thread.md)
   - ray-tracing
     - [GPU ray-tracing 的上层框架](./renderer-engineering/ray-tracing/scene-integration.md)
 - 通用工程实践
