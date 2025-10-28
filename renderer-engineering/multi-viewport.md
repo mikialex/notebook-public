@@ -45,6 +45,12 @@ suface的资源/状态可以在view之间share，global的资源/状态可以在
 
 camera虽然是作为view的配置，在执行per view的更新逻辑时，有可能是需要考虑camera的复用关系，考虑这样的场景：假设用户的多视窗界面，左右两个viewport设置了同一个camera，如何合理正确的实现用户对其中任何一个viewport的相机操作自动的同步到另一个？合理的做法是camera控制器状态的实例应该设计成per camera的，而不是per viewport，应该per camera的以一组该camera的viewports上的操作来进行控制器的状态更新。
 
+### 通过hooks来改进share
+
+因为状态区分的决策并没有标准答案，所以sharing的需求是容易变化的。而[hooks](../general-practice/hooks-pattern.md)的动态性特别的适合表达这样动态share的逻辑。
+
+实现上我们甚至可以完全per viewport的自由的表达renderer的资源/状态需求，这些需求采用hooks的share机制就可以自动的在合理的层级被share
+
 ## 渲染实现
 
 一种做法是既然是viewport，那么就直接使用图形api的viewport api来实现。但实际上采用这种做法在工程上会引入非常多的复杂度
@@ -67,7 +73,7 @@ camera虽然是作为view的配置，在执行per view的更新逻辑时，有�
 
 ## view dependent transform
 
-视角相关transform更新的问题是多viewport支持的另一大问题。这一能力也是editor场景常见的需求，比如和相机距离缩放无关的scale，比如billborad。通用来说就是收到相机相关因素影响的local matrix更新。
+视角相关transform更新的问题是多viewport支持的另一大问题。这一能力也是editor场景常见的需求，比如和相机距离缩放无关的scale，比如billboard。通用来说就是收到相机相关因素影响的local matrix更新。
 
 传统情况下，一般有上层业务逻辑根据camera来直接更新场景中对象的local matrix。为了支持这么做，viewport的渲染逻辑要支持让用户的更新逻辑能够注入到每一个view的渲染之前。（更加基本的问题：我们不能让用户控制自己完成viewport的渲染，因为渲染器本身要处理上述上层share结构包括按需渲染的细节，这本身就是内部实现。）
 
@@ -94,3 +100,10 @@ for each camera {
   - 可以采用不同强度的实现
 
 之所以不推荐采用shader实现，主要是因为需要支持host pick。
+
+## 一些依赖多view的渲染层的feature
+
+- viewcube
+- camera editor(3d场景中交互式的修改编辑相机参数)
+- effect compare(两个viewport绑定同一个相机采用不同的渲染配置)
+- culling/lod debugger(一个相机可视化另一个相机的剔除和lod效果)

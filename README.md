@@ -65,3 +65,4 @@
   - [两种软件类型](./misc/two-kind-of-software.md)
   - [Rust 类型名过长问题](./misc/rust-huge-debug-symbol.md)
   - [制度化加班](./working/overtime-work.md)
+  - [面向绩效（利益）工作](./working/result-oriented-working.md)
