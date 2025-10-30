@@ -53,6 +53,7 @@
   - [组合创建组合](./general-practice/composition-create-composition.md)
   - [RAII is bad(in some case)](./general-practice/raii-is-bad.md)
   - [hooks pattern](./general-practice/hooks-pattern.md)
+  - [Genrational arena shrink 的实现改进](./misc/generational-container-shrink.md)
   - [IO组件实现的质量标准](./general-practice/better-io-impl.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
