@@ -1,4 +1,4 @@
-# Genrational arena shrink 的实现改进
+# Generational arena shrink 的实现改进
 
 这里所谓的arena， 指的是一种动态容器：
 
@@ -9,7 +9,7 @@
 
 generational arena是无比有用的东西，然而其shrink有一些细节问题需要考虑：
 
-- 在不放弃generationcheck的安全性的情况下，generation信息，即便在shrink之后，被shrink的部分依然需要保存
+- 在不放弃generational check的安全性的情况下，generation信息，即便在shrink之后，被shrink的部分依然需要保存
 - arena内的空元素的位置是不确定的，所以shrink很难有效果， 而且shrink需要从最后往前依次找第一个非空元素
 
 合理的实现讨论：
