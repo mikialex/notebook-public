@@ -34,7 +34,7 @@ suface的资源/状态可以在view之间share，global的资源/状态可以在
 
 - global
   - scene本身相关的渲染资源，包括camera
-  - shadowmap等和viewport/surface无关的效果资源
+  - shadowmap(非cascade情况)等和viewport/surface无关的效果资源
   - 选择集
 - surface
   - swapchain相关的配置

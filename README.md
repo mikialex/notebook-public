@@ -13,7 +13,7 @@
 
 ## Table of Contents
 
-- 基础数据和计算框架
+- 数据和计算框架
   - 数据建模和状态管理
     - [采用关系型数据库作为富状态应用的数据管理方案](./data-modeling-and-computation/data-modeling/database-is-fundamental.md)
     - [数据模型的所有权](./data-modeling-and-computation/data-modeling/database-ownership-model.md)
