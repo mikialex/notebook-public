@@ -22,7 +22,7 @@
 
 如果降采样算法能够支持3 to 1这种的case。那么在边缘部分按需处理也可以实现。但是实现成本较高。
 
-另一种做法是将用户的非pot frame depth的mipmap数据采用另一个独立的pot texture容器存储。这样做，生产mipmap的实现会简单，成本上升要少一些，但是后面所有使用的地方会变得麻烦，需要封装好。这个做法还有一个好处是，生成mipmap的spd compute shader，需要采用storage image来写mipmap数据，然而用户的frame texture是depth32或者stencildepth24格式，这种格式的mipmap数据是无法以storage image的方式进行绑定的。所以你只能为mipmap数据准备另一个独立的texture 容器。总之可以说因为这些细节，整个实现无比的麻烦。
+另一种做法是将用户的非pot frame depth的非base level mipmap数据采用另一个独立的pot texture容器存储。这样做，生成mipmap的实现会简单，成本要少一些，但是后面所有使用的地方会变得麻烦，需要做好访问的封装。这个做法还有一个好处是，生成mipmap的spd compute shader，需要采用storage image来写mipmap数据，然而用户的frame texture一般是depth32或者stencildepth24格式，这种格式的mipmap数据是无法以storage image的方式进行绑定的。所以你只能为mipmap数据准备另一个独立的texture 容器。总之这部分有诸多细节需要考虑。
 
 ## 渲染流程中的clear depth
 

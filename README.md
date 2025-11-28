@@ -2,7 +2,7 @@
 
 ## About
 
-本项目主要存储笔者[mikialex](https://github.com/mikialex)的公开写作。内容主要偏向工程实践和技术研究，亦有非技术类的个人思考。这些条目主要从笔者的其他私有文档中萃取而来，定期手工或半自动同步，并简单校对差漏调整行文。仅代表个人观点，不保证正确性，不包含算法生成内容。勿商业使用。转发和引用需注明来源。
+本项目主要存储笔者[mikialex](https://github.com/mikialex)的公开写作。内容主要偏向工程实践和技术研究，亦有非技术类的个人思考。这些条目主要从笔者的其他私有文档中萃取而来，定期手工或半自动同步，并简单校对差漏调整行文。仅代表个人观点，不保证正确性，不包含算法生成内容。禁止商业使用, 转发和引用需注明来源。
 
 暂时没有继续在 <https://mikialex.github.io/> 继续更新。这样考虑有：
 
@@ -55,6 +55,7 @@
   - [RAII is bad(in some case)](./general-practice/raii-is-bad.md)
   - [hooks pattern](./general-practice/hooks-pattern.md)
   - [Generational arena shrink 的实现改进](./misc/generational-container-shrink.md)
+  - [数据容器的内存消耗控制](./misc/resize_strategy.md)
   - [IO组件实现的质量标准](./general-practice/better-io-impl.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
