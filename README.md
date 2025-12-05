@@ -15,7 +15,7 @@
 
 - 数据和计算框架
   - 数据建模和状态管理
-    - [采用关系型数据库作为富状态应用的数据管理方案](./data-modeling-and-computation/data-modeling/database-is-fundamental.md)
+    - [统一数据模型和数据框架](./data-modeling-and-computation/data-modeling/database-is-fundamental.md)
     - [数据模型的所有权](./data-modeling-and-computation/data-modeling/database-ownership-model.md)
   - 计算表达
     - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
@@ -47,6 +47,7 @@
   - [场景数据虚拟化](./renderer-engineering/scene-virtualization.md)
   - [渲染器 wasm thread 支持问题](./renderer-engineering/renderer-wasm-thread.md)
   - [多viewport支持](./renderer-engineering/multi-viewport.md)
+  - [蒙皮动画原理](./renderer-engineering/skin_animation.md)
   - ray-tracing
     - [GPU ray-tracing 的上层框架](./renderer-engineering/ray-tracing/scene-integration.md)
 - 通用工程实践
