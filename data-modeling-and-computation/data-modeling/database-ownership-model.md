@@ -1,6 +1,6 @@
 # 数据模型的所有权
 
-这里讨论的所有权，指的是entity之间存在own的关系，使得
+本文讨论的所有权指entity之间存在own的关系，使得
 
 - 自动的回收资源，避免leak：某entity被删除后，被其own的entity，在一些情况下（比如没有任何其他entity own，且进入不可达的状态）自动的被删除
 - 保证数据的引用完整性：避免删除还被引用的entity，造成bad handle(entity指向不存在的已经删除的entity)
