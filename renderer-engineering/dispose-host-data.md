@@ -41,7 +41,7 @@ UriDataSource可以做一个In-memory source的伪实现，也可以基于file/n
 
 ---
 
-db层的数据表达，由原本的直接数据T，变更为这样的枚举，是否采用可释放数据完全由用户决定。
+db层的数据表达，由原本的直接数据T，变更为这样的枚举，由用户决定是否采用可释放数据。
 
 ```rust
 pub enum MaybeUriData<T> {
@@ -49,6 +49,14 @@ pub enum MaybeUriData<T> {
   Living(T),
 }
 ```
+
+问题：为什么需要将uri存储入db，而不由一个外部系统负责数据加载？，具体做法是如果有uri数据需要写入db，我们只写入某个外部系统，由这个外部系统来负责实际的db修改，在uri加载后写入实际数据到db。这样原本现在基于db上现成数据的消费系统可以不做任何改动。
+
+这么做看似简单，但实际上非常麻烦，这种做法的问题是：
+
+- 这个外部系统还需要负责数据卸载，所以现有数据消费系统还需要通知它卸载数据，这其实还是需要修改消费系统的实现
+- 首次写入默认数据来达成uri未加载行为，依然需要修改消费系统实现，来适配这一默认数据的行为
+- 首次写入默认数据，和卸载数据，会造成额外两遍db change，而消费系统还要特别的在卸载数据的change时不做任何事情
 
 ### 具体使用案例和潜在问题
 
@@ -67,4 +75,14 @@ pub enum MaybeUriData<T> {
 - 将glb中的image/mesh buffer通过create_for_direct_data重新单独写回磁盘，转化为上一个问题
   - 实际上需要再写一份数据到磁盘，有额外成本
 - 构造特别的path，用glb path + sub resource信息来表达。由特别的UriDataSource来负责解析
-  - 实现很复杂，特别是同一glb path不同sub resource的future复用问题。一般认为不如不实现
+  - 实现很复杂，特别是同一glb path不同sub resource的future复用问题。
+  
+一般认为方法1虽然要付出成本，但较为合理。因为
+
+- 实现简单
+- 加载之后其实并不能保证glb是一个稳定的数据源。如果重新制作新的磁盘备份反而能解决这个问题
+
+## 作为其他高级实现的前置实现
+
+- uri可以去指代任何数据源，包括我们在[持久化](../editor-engineering/database-incremental-persistency.md)相关讨论中提到的表外的mesh undoredo system.
+- host数据可通过uri重建，才能确保表内可交换的host数据实际上不存在，而这是虚拟化相关实现的前置工作
