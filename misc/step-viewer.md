@@ -12,7 +12,7 @@ step是一个非常[复杂](https://www.steptools.com/stds/stp_expg/arm.html)的
 
 大致流程是：
 
-- 编写parser解析 express schema描述文件（express crate）(是的，你得先编写schema的schema的parser！)
+- 编写parser解析 express schema描述文件（express crate）(是的，你得先编写spec的schema的parser！)
 - 解析用express编写的 step ap214标准，生成step file的parser（step crate）
 - 用step file parser parse step文件
   - 读取场景parent和transform信息，构造场景树
