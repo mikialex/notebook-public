@@ -6,7 +6,7 @@
   - 在共享同一份gpu资源的情况下（如果在图形api支持），支持在多个window handle或者web canvas上的绘制。
 - 对于单个surface， 渲染支持输出到其中的一部分（支持绘制到其上的多个viewport， 这些viewport可以overlap）。
   - 一种争议是这种情况应用层应该还是只支持surface的全范围绘制，但考虑到应用层也可能负责一部分的自绘，那么绘制surface的一部分其实是合理的需求。如果支持绘制surface的一部分，那么支持绘制surface的多个部分也是合理的需求
-  - 实现viewcube就依赖viewport支持overlap。
+  - 实现viewcube需要viewport支持定义overlap顺序。
 
 即便业务层没有多view的需求，一些有用的渲染层feature都依赖于多viewport完善支持
 
@@ -63,7 +63,7 @@ camera虽然是作为view的配置，在执行per view的更新逻辑时，有�
 一种做法是：既然是viewport，那么就直接使用图形api的viewport api来实现。但实际上采用这种做法在工程上会引入非常多的复杂度
 
 - clear会影响到viewport外的内容（以webgpu行为为准）
-- 参与效果处理的中间attachment，比如taa的history，如果所有viewport并不cover全部，那么就有内存浪费，并且不支持viewport相互hoverlap的情况。如果单独以viewport为单独进行处理，那么进行地址转化会很麻烦
+- 参与效果处理的中间attachment，比如taa的history，如果所有viewport并不cover全部，那么就有内存浪费，并且不支持viewport相互overlap的情况。如果单独以viewport为单独进行处理，那么进行地址转化会很麻烦
 - 很难说图形api是否能高效优化小viewport在大canvas上的绘制性能和小canvas一致。因为viewport设置是pass内encode的信息，并不是pass的本身的结构信息，那么可能在移动端上有性能问题。
 
 所以我认为合理的做法，是每个viewport执行独立的全attachment逻辑，最后自己在surface上做composition。这样原管线的逻辑基本可以不做调整，只是要多copy一次结果。

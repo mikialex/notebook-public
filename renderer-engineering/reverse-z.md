@@ -20,9 +20,14 @@
 
 有必要，因为
 
-- 目前高跨平台要求的应用需要支持gles300（虽然在这种情况下extension一般是可以work的）
+- 目前高跨平台要求的应用需要支持gles300（虽然在大部分情况还还有extension支持）
 - 可以对比验证问题
 - 可以改进项目的质量（在某个层面统一的对depth的全局读写测试，ndc的配置做控制）
+- 可以封装depth的表达
+
+没有必要，因为过于麻烦
+
+- 所有任何依赖depth/near/far/projection matrix的地方都需要考虑z是否是reversed
 
 #### 是否有必要支持其他改进depth精度分布的技术
 
@@ -37,3 +42,9 @@
 比如分层 depth渲染。
 
 这个做法，基本上是靠渲染成本翻倍提升，来获取精度的翻倍提升。只在特殊场景有用，实现较为复杂。
+
+#### 场景层state overrride api的调整
+
+场景层可能允许用户直接设置rasterization相关的state，其中就包含depth的比较函数。
+
+原始的图形api一般采用less greater之类的直接的数值上的语义，而如果depth相关的表达是不确定的，此时就不应该采用数值上的语义。而应该采用nearer further的语义。渲染实现会根据采用的depth测试和读写方式来转化为实际的less greater设置。
