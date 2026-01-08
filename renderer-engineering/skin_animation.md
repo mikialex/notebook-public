@@ -18,7 +18,7 @@
 某个关节的控制结果（被蒙皮控制后的顶点的local space位置）的计算过程：
 
 - **某个顶点被某个关节控制，意味着该顶点在运动/动画过程中（大致）相对于该关节的关节坐标系不变**
-- 绑定蒙皮时决定mesh的vertex position属于哪些关节，是在标记该vertex是应该应用哪个（些）关节的关节space。
+- 绑定蒙皮时决定mesh的vertex position属于哪个（些）关节，是在标记该vertex是应该应用哪个（些）关节的关节space（及其权重）。
 
 - vertex buffer中取到的vertex position是绑定时的localspace，所以先需要转化到该关节的关节space的position
   - 实现这一步需要乘上**绑定时**root关节space到该关节space的transform mat，即**绑定时**joint node的world mat的inverse

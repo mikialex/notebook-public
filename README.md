@@ -19,6 +19,7 @@
     - [数据模型的所有权](./data-modeling-and-computation/data-modeling/database-ownership-model.md)
   - 计算表达
     - [基于抽象query的数据消费框架](./data-modeling-and-computation/computation/query.md)
+    - [query框架的另一种变更数据抽象：DataChanges](./data-modeling-and-computation/computation/data-changes.md)
     - [gpu并行计算框架](./data-modeling-and-computation/computation/parallel-compute-framework.md)
     - [gpu上的动态workload计算](./data-modeling-and-computation/computation/gpu-dynamic-workload.md)
 - 编辑器和场景层工程实现研究

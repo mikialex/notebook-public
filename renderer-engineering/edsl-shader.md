@@ -1,6 +1,6 @@
 # EDSL Shader Framework
 
-## 将shader做为运行时可编程的数据结构
+## 将shader视做为运行时可编程的数据结构
 
 将shader视作和texture，mesh一样的静态资产（文本text）是错误的工程实践。
 

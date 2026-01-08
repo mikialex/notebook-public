@@ -102,11 +102,11 @@ db的uri改造实际上导致消费系统的input 从 `DualQuery<K, T>` 变更�
 
 所以具体的改造工作是：实现一个 `DualQuery<K, MaybeUriData<T>>` 到 `DataChanges<K, T>` 的转换器，并将所有对`DualQuery<K, T>`的依赖转化为对`DataChanges<K, T>`的依赖。
 
-这个转换器内部会调用`UriDataSource`的数据源接口来做加载，同时还可以封装决定哪些数据加载和卸载的调度器逻辑（预留的虚拟化实现点）。进一步说转换器可能还可以暴露外部的注入weight的接口来提供支持调度重要性信息，weight可能是gpu管线异步生成的数据。
+这个转换器内部会调用`UriDataSource`的数据源接口来做加载，同时还可以封装决定哪些数据加载和卸载的调度器逻辑（预留的虚拟化实现点）。进一步的，转换器还可以暴露外部的注入weight的接口来提供支持调度重要性信息，weight的数据源可以由gpu管线异步提供（比如virtual texture/其他gpu driven的虚拟化资源调度），也可以由host提供实现。
 
-转化器能提供卸载能力，是因为output的datachange是具备remove message的
+转化器能提供卸载能力，是因为output采用datachange接口，其具备remove message。
 
-`DualQuery<K, MaybeUriData<T>>` 需要转化为 `DataChanges<K, T>` 而不是 `DualQuery<K, T>`，是因为 `DualQuery<K, T>` 包含 `Query<K, T>`，而这是不可能的，因为T的全集数据根本不可能存在（因为我们要实现数据卸载和虚拟化）。所以转化出来只能是增量数据。
+`DualQuery<K, MaybeUriData<T>>` 需要转化为 `DataChanges<K, T>` 而不是 `DualQuery<K, T>`，是因为 `DualQuery<K, T>` 包含 `Query<K, T>`，而这是不可能的，因为T的全集数据根本不可能存在（因为我们要实现数据卸载和虚拟化）。所以接口只能表达增量的数据变化。
 
 采用`DataChanges<K, T>`而不是`DualQuery<K, ValueChange<T>>` 正是我们为什么要设计datachange的原因之一，即datachanges不包含previous message。转化器是不可能生成包含previous message的change信息，因为如果要生成previous T，那么转化器内部就需要维持current T，这同样和我们要支持数据卸载和虚拟化的要求是矛盾的。
 
@@ -124,4 +124,4 @@ texture和mesh的gpu数据维护系统本身就只依赖datachanges作为input�
 
 对于单纯的数据卸载来说。此时需要将所有的url重新加载并emit给这个新创建的下游。对于虚拟化，一个高级且合理的实现是：虚拟化的实现需要单独考虑这个新出现的下游，作为一个独立的loading set，在后续渐近的完成这个loading set的loading，对于虚拟化来说，控制内存不仅仅要控制loaded的内存，还需要控制在途的loading内存，所以还涉及到loading带宽在不同loading set之间分配的问题。当这个新出现的loading set和主loading set*差不多*一致了之后，就需要合并loading set，所谓合并loading set，实际上是直接做交集，不同的loadingset求同不存异只保留各自都已经load的item。总之整个实现复杂程度非常高，但是对于上层用户来说，能提供很合理的行为表现：场景中能够raytracing的物体越来越多，慢慢的这些物体的集合可以对齐到普通渲染能显示的物体集合，在某个时间点之后完全同步，同时这个过程中相机移动导致的paging性能表现变差（因为要share load带宽给blas）
 
-一个糟糕但是简单的虚拟化调度实现也可以是，在出现这种case之后，立刻放弃所有已有的loading set，通知所有下游销毁所有数据，然后完全重新load数据（可以认为是和一个空的loadingset立刻做交集）。这样可以始终只维护一个loading set的状态，不需要考虑多set和set渐近合并的复杂问题，大幅简化实现。但是这对于上层用户来说可能是不可接受的。
+一个简单的虚拟化调度实现也可以是，在出现这种case之后，立刻放弃所有已有的loading set，通知所有下游销毁所有数据，然后完全重新load数据（可以认为是和一个空的loadingset立刻做交集）。这样可以始终只维护一个loading set的状态，不需要考虑多set和set渐近合并的复杂问题，大幅简化实现。但是这对于上层用户来说可能是不可接受的。已有的loading set也可以不做卸载，直接重新加载已有的loaded数据，但是这样我们需要假设整体的容量会因为开启这个新的下游而提升（已有的loading数据不需要因为要分享整体容量而减少占用）
