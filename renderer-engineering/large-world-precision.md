@@ -51,7 +51,7 @@
 - 实际上类似于“model view”的计算需求变成了两个（camera和model）高精度world position的减法操作
 - 高精度world position本身是不需要和camera联动的，避免了上述问题
 
-然后两个高精度position的减法，对于shader内是，不依赖f64，是可以高效实现的。比如
+然后两个高精度position的减法，是不依赖f64，所以对于shader内是可以高效实现的。具体做法是
 
 - 采用两个f32来表示一个高精度f64
   - 第一个f32直接由f64 clamp精度而来
