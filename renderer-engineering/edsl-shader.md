@@ -105,7 +105,7 @@ impl<T, U> Add<Node<U>> for Node<T>
 where
   T: ShaderNodeType + Add<Output = X>,
   U: ShaderNodeType,
- .X: ShaderNodeType,
+  X: ShaderNodeType,
 {
   type Output = Node<X>;
 
