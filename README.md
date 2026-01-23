@@ -63,6 +63,7 @@
   - [数据容器的内存消耗控制](./misc/resize_strategy.md)
   - [IO组件实现的质量标准](./general-practice/better-io-impl.md)
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
+  - [性能优化的方向](./general-practice/performance-direction.md)
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
