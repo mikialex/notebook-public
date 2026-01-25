@@ -49,6 +49,7 @@
   - [表内数据的抽象访问机制](./renderer-engineering/rebuildable-host-data.md)
   - [场景数据虚拟化](./renderer-engineering/scene-virtualization.md)
   - [场景虚拟化实现的细节问题](./renderer-engineering/scheduler-design.md)
+  - [GPU Multi Queue的理解](./renderer-engineering/gpu-mutli-queue.md)
   - [渲染器 wasm thread 支持问题](./renderer-engineering/renderer-wasm-thread.md)
   - [多viewport支持](./renderer-engineering/multi-viewport.md)
   - [蒙皮动画原理](./renderer-engineering/skin_animation.md)
