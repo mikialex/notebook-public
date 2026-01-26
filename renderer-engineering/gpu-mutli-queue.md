@@ -16,15 +16,18 @@ vulkan 令人感觉困惑的点是：其api大部分看起来设计的非常底�
 - 一个gpu任务，即便其宽度足够大，一般也只会在某个时刻满载gpu上某些硬件资源，而不是全部的硬件资源
 - 某些gpu可以支持同时并行多个gpu任务，如果他们的资源消耗类型存在互补的关系，那么整体的吞吐量就可以提升
 - 某些gpu可以支持同时并发多个gpu任务，并控制不同gpu任务执行的优先级/延迟。
-- queue作为任务提交的端口，其在实现上一般是朴素的（设计上没有规定），不会自动的利用表达上述逻辑
+- queue作为任务提交的端口，其在实现上一般是朴素的（设计上没有规定），不会自动的分析workload优化出上述逻辑
 - 图形api通过多queue让用户来表达上述逻辑
 
 ## 一些讨论
 
 - <https://github.com/KhronosGroup/Vulkan-Docs/issues/569>
+  - <https://github.com/KhronosGroup/Vulkan-Docs/issues/1320>
 - webgpu multiqueue discuss
   - <https://kvark.github.io/webgpu-debate/MultiQueue.html>
   - <https://github.com/gpuweb/gpuweb/issues/1066>
 - <https://gpuopen.com/learn/concurrent-execution-asynchronous-queues/>
   - GCN hardware contains a single geometry frontend, so no additional performance will be gained by creating multiple direct queues
   - While GCN hardware supports multiple compute engines we haven't seen significant performance benefits from using more than one compute queue in applications profiled so far
+- <https://developer.nvidia.com/blog/vulkan-dos-donts/>
+  - Don’t overlap compute work on the graphics queue with compute work on a dedicated asynchronous compute queue on pre-Ampere GPUs. This may lead to gaps in execution of the asynchronous compute queue
