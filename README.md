@@ -53,6 +53,7 @@
   - [渲染器 wasm thread 支持问题](./renderer-engineering/renderer-wasm-thread.md)
   - [多viewport支持](./renderer-engineering/multi-viewport.md)
   - [预过滤 Shadowmap 和 OIT](./renderer-engineering/shadowmap-and-oit.md)
+  - [Frame pacing 的理解](./renderer-engineering/frame-pacing.md)
   - [蒙皮动画原理](./renderer-engineering/skin_animation.md)
   - ray-tracing
     - [GPU ray-tracing 的上层框架](./renderer-engineering/ray-tracing/scene-integration.md)
