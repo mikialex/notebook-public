@@ -10,7 +10,7 @@
 - unsafe代码需要注明安全边界
   - 并编写额外的*可通过编译配置关闭*的运行时检查来验证安全边界
   - 安全假设不能依赖用户输入
-- unsafe代码需要编写覆盖率完善的miri的单元测试
+- ~~unsafe代码需要编写覆盖率完善的miri的单元测试~~ 使用miri执行所有单元测试
 - 采用[randomize layout](https://github.com/rust-lang/compiler-team/issues/457)编译配置尽早暴露transmute unsound问题
   - transmute是容易写错的，建议在api上强制写清楚类型。即便在开发时编写正确，后续的长期维护很可能导致类型变动，然后不知不觉transmute错误的类型。（后续：clippy已经默认强制要求写明类型）
 
@@ -42,4 +42,10 @@ dhat有rust[实现](https://github.com/nnethercote/dhat-rs)，通过替换全局
 
 linux only 的 [heaptrack](https://github.com/KDE/heaptrack)比较好用，这是[具体用法](https://gist.github.com/HenningTimm/ab1e5c05867e9c528b38599693d70b35), 我试图寻找类似的跨平台替代品，但是没有。
 
-RA的[这篇文章](https://rust-analyzer.github.io/blog/2020/12/04/measuring-memory-usage-in-rust.html)比较有帮助, 其中介绍到了一种阿基米德方法（我在公司里一般口头戏称之为反向排水法），即将排查的代码数据结构及维护逻辑double一份，通过观测内存上涨来估计之前这部分逻辑的绝对内存消耗。这个方法在项目中排查中采用过，具备很高的实践价值。
+RA的[这篇文章](https://rust-analyzer.github.io/blog/2020/12/04/measuring-memory-usage-in-rust.html)比较有帮助, 其中介绍到了一种阿基米德方法（我在公司里一般口头戏称之为反向排水法），即：将排查的代码数据结构及维护逻辑double一份，通过观测内存上涨来估计之前这部分逻辑的绝对内存消耗。这个方法在项目中排查中采用过，具备很高的实践价值。
+
+采用visual studio的heap工具，这个方法实践是可用的，但是效率比较低
+
+自行编写allocator，记录内存分配 callstack，自行分析问题。当所有调试工具都看不清楚问题时，就必须自行做过滤和分析（比如转到火焰图做可视化），成本较高，但是是值得一试的兜底方案。
+
+还有一种简单的hack，对大部分内存泄漏的情况其实是有用的：大部分内存泄漏，其实都是有动态容器在扩容，因为扩容实现一般都是指数的，所以内存泄漏会越漏越多。所以我们只要构造一个简单的复现场景，然后在allocator断点watch一次足够大的内存分配，就可以直接定位到问题。
