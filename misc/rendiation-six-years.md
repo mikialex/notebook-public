@@ -111,7 +111,7 @@ rendiation对我来说是一件逻辑严密，复杂精巧的玩具。
 
 - 实现表内数据mesh和texture的虚拟化
 - 改进和丰富效果实现
-- indirect后端默认采用meshlet管线，采用meshlet shader
+- indirect后端默认采用meshlet管线，采用meshshader
 
 长期方向是
 
