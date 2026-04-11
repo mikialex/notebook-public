@@ -12,7 +12,7 @@ step是一个非常[复杂](https://www.steptools.com/stds/stp_expg/arm.html)的
 
 大致流程是：
 
-- 编写parser解析 express schema描述文件（express crate）(是的，你得先编写spec的schema的parser！)
+- 编写parser解析 express schema描述文件（express crate）(是的，你得先编写spec的spec的schema的parser！)
 - 解析用express编写的 step ap214标准，生成step file的parser（step crate）
 - 用step file parser parse step文件
   - 读取场景parent和transform信息，构造场景树
@@ -29,32 +29,51 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
   - 一些简单曲面这样的lowing是可以简单计算/解析的计算的。对于nurbs曲面。fox的做法是对每一个nurbs曲面预计算8 x 8的离散点，然后找到最近的一个点开始用牛顿法来求解。。
 - 投影到参数空间后，这些点集内部（其实fox的实现很粗糙，根本没有保证在border的内部，如果有问题直接删了重试罢了）插入一些点，这些点叫做steiner_point。很显然是要插入这些点的，不然这个曲面内部根本没有任何三角化。插入后在参数空间做带border限制的Delaunay三角化。然后在转化到世界空间的mesh
 
-## 3d版vello的可行性
+## 3d版vello
 
-> 注：仅是初步的不完整研究，其可行性也是不确定的，内容会随时更新调整。
+和foxtrot一样简单的转化为静态的三角形模型是比较传统的做法，但我理想中的stepviewer，其技术路线类似于一个3d版的[vello](https://github.com/linebender/vello)，动态的在gpu上自适应细分曲面，来解决cad场景：
 
-和foxtrot一样简单的转化为三角形模型肯定是可以的，但是我一直幻想做一个3d版的[vello](https://github.com/linebender/vello)，来解决cad场景：
+- 能够无限放大曲面曲线细节而不会出现传统渲染方法因为离散精度不足，而导致显示质量不佳的问题
+- 反之能够实现合理的LOD，大幅改进渲染成本，特别是在极其复杂的cad场景下具备显著性能优势
 
-- 能够无限放大曲面曲线细节而不会出现传统渲染方法离散精度不足的问题
-- 大幅改进渲染性能，特别是极其复杂的cad场景
+### 主要可行的技术路线
 
-### 可能的做法和技术路线
+这个显示技术是已经是有一定成熟研究的，但目前不确定有哪些工程化的成熟产品。
 
-#### 直接raytracing 参数化曲面
+[ETER: Elastic Tessellation for Real-Time Pixel-Accurate Rendering of Large-Scale NURBS Models](https://dl.acm.org/doi/10.1145/3592419)
 
-- [https://www.mattkeeter.com/projects/mrep/](https://www.mattkeeter.com/projects/mrep/)
+- 主要做法是：数据预处理 将高次nurbs曲面统一降级成2次bezier的patch，这一步不考虑参数空间的裁剪（后面会提到）
+- 在gpu上自适应三角化bezier patch到网格
+  - 这篇论文的主要亮点是采用tensor core来加速bezier patch的三角化
+- 曲面patch自动生成uv参数，uv参数映射会原nurbs曲面的参数空间
+- 在fragment shader拿到的uv就是该曲面点在原nurbs曲面的参数空间位置信息，然后计算是否需要被裁减，如果裁减就discard
+  - 裁减的算法应该有很多，该论文中使用的是 [Direct trimming of NURBS surfaces on the GPU](https://dl.acm.org/doi/10.1145/1531326.1531353)
+  - 裁减的问题其实等价于2d矢量渲染，甚至slug的算法也是可用的。裁减也涉及到参数空间裁减曲线的预处理
+- 中科大的项目
+
+#### 工程化方案
+
+> 后续可能会实现上述paper，如有进展会整理于此
+
+### 其他可能的技术路线（之前个人思考的方向）
+
+> 这部分没有有效结论，可跳过
+
+#### 直接raytracing 参数化曲面（不太可行）
+
+- [Raytracing with M-Reps](https://www.mattkeeter.com/projects/mrep/)
   - 结论：比三角化+bvh 再tracing性能慢很多
-- [https://dl.acm.org/doi/pdf/10.1145/800064.801287](https://dl.acm.org/doi/pdf/10.1145/800064.801287)
+- [RAY TRACING PARAMETRIC PATCHES](https://dl.acm.org/doi/pdf/10.1145/800064.801287)
 
-#### 实时三角化（目前倾向的技术方向）
+#### 直接考虑支持裁减
 
-- 根据视角自适应三角化密度
-  - 在保证性能的基础上，是否能进一步改进到曲率上
-- 采用mesh shader
+我个人判断支持参数空间的曲面裁减才是问题的困难之处，在我没有意识到可以直接在fragment shader做裁减之前，我试图直接在三角化或者曲面降级流程中直接支持裁减。
 
-### 流程梳理
+其中曲面降级过程中支持裁减：非常困难，没有讨论价值。
 
-#### input
+三角化过程中直接支持裁减：思路就是想办法直接将上述foxtrot的三角化实现做到gpu上，并且做到自适应。比较困难，相关的想法是：
+
+input
 
 - 某类curve的所有instance buffer
 - boundary -> curve one-to-many buffer（ordered）
@@ -65,11 +84,11 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
 - 某类surface的所有instance 及boundary reference
   - surface 不采用bounding进行剔除，因为border curve的剔除已经能够实现这一能力
 
-#### output
+output
 
 - triangle mesh buffer
 
-#### 流程
+流程
 
 - 所有surface-patch利用bounding信息，进入其他gpu 剔除管线进行预剔除得到visible surface-patch
 - 计算visible curves，fanout（range二分查找）
@@ -93,7 +112,7 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
   - 可能要根据具体曲面类型来决定上述尝试的差值点个数和位置，比如大于两次的曲线，采用一个点判断很可能是错的。
 - cad 类型的模型，内部结构是非常非常丰富的，所以以完整曲面进行剔除估计效果很差。而又很难找到一个曲面的子结构来做剔除。所以潜在要做的三角化可能会很多。
 
-### 参考资料及WIP搜索实现
+参考资料及搜索实现
 
 - triangulation
   - foxtrot 是自己写的Delaunay
@@ -121,9 +140,9 @@ Polygon Triangulation](https://www.cs.hiroshima-u.ac.jp/cs/_media/triangulation_
 
 [A three-dimensional parametric mesher with surface boundary-layer capability](https://www.sciencedirect.com/science/article/pii/S0021999114002447)
 
-## 大幅改进复杂场景的渲染性能和显示效果的其他方案
+#### nanite
 
-另外一种做法，就是生成足够高精度的mesh，然后全部预处理成mesh lod graph，做好虚拟化。
+最后一种做法，就是生成足够高精度的mesh，然后全部预处理成mesh lod graph，做好虚拟化。虽然肯定可用，但这一做法不符合我们研究的主题
 
 ## 其他step的有用资源
 
