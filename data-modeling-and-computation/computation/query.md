@@ -92,7 +92,7 @@ database的生产消费流程是：
 
 假设考虑对DeltaQuery执行mapping，filter之类的transform，是否可以完成数据集的增量消费？
 
-答案是这仅限于单个query的情况，如果我们考虑多个delta query需要结合（join）的进行增量消费，单纯依赖delta query是不够的（而实际逻辑中大部分都设计到复杂的query合并逻辑）。举例来说，假设有一个zip的query结构，要获得zip后的query的增量change，单纯依赖zip前的两边的delta query是不够的，直接对detla query进行zip在逻辑上是没有意义的。
+答案是这仅限于单个query的情况，如果我们考虑多个delta query需要结合（join）的进行增量消费，单纯依赖delta query是不够的（而实际逻辑中大部分都涉及到复杂的query合并逻辑）。举例来说，假设有一个zip的query结构，要获得zip后的query的增量change，单纯依赖zip前的两边的delta query是不够的，直接对detla query进行zip在逻辑上是没有意义的。
 
 正确处理多query组合子的增量消费，不仅依赖delta query这个增量表，还同时依赖原始query的全量表。还是以zip举例：zip的上游两边假设分别有以k为key的a1，b1的取值，假设经修改后，左边的k取值变为 a2，那么zip的增量change里会是(a2, b1)。位于zip的右侧上游，即便没有任何change，要生产正确的(a2, b1)下游change，也必须依赖对b1的访问，即必须访问右侧的全量表。
 
@@ -145,7 +145,7 @@ pub trait MultiQuery {
 
 ## 计算图的动态性和变更一致性问题
 
-用户应用的feature开启情况是动态的，所以用户的计算需求是动态的，所以用户的dualquery计算图是动态的，其结构根据用户feature的实用情况动态改变。即数据源的dualquery是动态根据需求创建的，所以存在数据先已经存在，数据源后续再建立的情况。所以任何作为数据源的dualquery，在创建时，需要将已经存在的全集数据，当作变更数据进行全量消费。否则会出现丢失变更信息的问题
+用户应用的feature开启情况是动态的，所以用户的计算需求是动态的，所以用户的dualquery计算图的结构是动态的，其结构根据用户feature的使用/激活情况动态改变。即数据源的dualquery是动态根据需求创建的，所以存在数据先已经存在，数据源后续再建立的情况。所以任何作为数据源的dualquery，在创建时，需要将已经存在的全集数据，当作变更数据进行全量消费。否则会出现丢失变更信息的问题
 
 ## 计算图的多阶段消费和变更一致性问题
 
