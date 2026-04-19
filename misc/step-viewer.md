@@ -38,22 +38,33 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
 
 ### 主要可行的技术路线
 
-这个显示技术是已经是有一定成熟研究的，但目前不确定有哪些工程化的成熟产品。
-
 [ETER: Elastic Tessellation for Real-Time Pixel-Accurate Rendering of Large-Scale NURBS Models](https://dl.acm.org/doi/10.1145/3592419)
 
-- 主要做法是：数据预处理 将高次nurbs曲面统一降级成2次bezier的patch，这一步不考虑参数空间的裁剪（后面会提到）
+- 数据预处理 将高次nurbs曲面通过节点插入统一处理为有理bezier的patch
 - 在gpu上自适应三角化bezier patch到网格
-  - 这篇论文的一个主要亮点是采用tensor core来加速bezier patch的三角化
-  - 同时整体也比较先进的技术（visibility rendering， meshlet）
+  - 采用tensor core来加速bezier patch的三角化
+- 整体也比较先进的技术（visibility rendering，软件光栅化， meshlet）
 - 曲面patch自动生成uv参数，uv参数映射回原nurbs曲面的参数空间
 - 在fragment shader拿到的uv就是该曲面点在原nurbs曲面的参数空间位置信息，然后计算是否需要被裁减，如果裁减就discard
   - 裁减的算法应该有很多，该论文中使用的是 [Direct trimming of NURBS surfaces on the GPU](https://dl.acm.org/doi/10.1145/1531326.1531353)
-  - 裁减的问题其实等价于2d矢量渲染，甚至slug的算法也是可用的。裁减也涉及到参数空间裁减曲线的预处理
+  - 裁减的问题其实等价于2d矢量渲染，可能其他的算法也是可用的（比如slug）。裁减也涉及到参数空间裁减曲线的预处理（？）
 - 不同patch面之间可能会有1像素宽度的缝隙：
-  - 一个可行的解决的做法是，开启硬件保守光栅化，但效果可能不是最好（比如不同patch有不同材质，边界的视觉质量就变差（锯齿））
-    - 这篇文章进一步采用了新的做法来改进：同时光栅化保守和非保守，并且根据两张图像的depth，patch id，来决定采用哪一个结果。
-- 中科大的项目
+  - 开启硬件保守光栅化，但不同patch有不同材质，边界的视觉质量就变差（锯齿）
+    - 做法改进：同时光栅化保守和非保守，并且根据两张图像的depth，patch id，来决定采用哪一个结果。
+  - 没有解决trim导致的缝隙问题
+- 背景和其他信息：
+  - 和中科大相关
+    - <http://staff.ustc.edu.cn/~lgliu/Projects/2023_ETER/default.html>
+    - <http://gcl.ustc.edu.cn/>
+  - 导师 刘利刚 <http://staff.ustc.edu.cn/~lgliu/>
+  - 作者 Ruicheng Xiong
+    - <https://dl.acm.org/profile/99660985955>
+  - 作者 Cong Chen 的其他相关研究：
+    - <https://orcid.org/0009-0007-3527-6313>
+    - <https://www.linkedin.com/in/cong-alex-c-3a130611/>
+    - 创业在做相关的工作 Sheyun Technology(设云科技) <http://lyteflow.cn/>
+
+<!-- [The Cone of Normals Technique for Fast Processing of Curved Patches](http://www.abiezzi.com/Salim/publications/Docs/[Cone]%20v12i3pp261-272.pdf) -->
 
 #### 工程化方案
 
