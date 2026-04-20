@@ -43,7 +43,7 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
 - 数据预处理 将高次nurbs曲面通过节点插入统一处理为有理bezier的patch
 - 在gpu上自适应三角化bezier patch到网格
   - 采用tensor core来加速bezier patch的三角化
-- 整体也比较先进的技术（visibility rendering，软件光栅化， meshlet）
+- 整体采用了比较先进的技术（visibility rendering，软件光栅化， meshlet）
 - 曲面patch自动生成uv参数，uv参数映射回原nurbs曲面的参数空间
 - 在fragment shader拿到的uv就是该曲面点在原nurbs曲面的参数空间位置信息，然后计算是否需要被裁减，如果裁减就discard
   - 裁减的算法应该有很多，该论文中使用的是 [Direct trimming of NURBS surfaces on the GPU](https://dl.acm.org/doi/10.1145/1531326.1531353)
@@ -53,6 +53,7 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
     - 做法改进：同时光栅化保守和非保守，并且根据两张图像的depth，patch id，来决定采用哪一个结果。
   - 没有解决trim导致的缝隙问题
 - 背景和其他信息：
+  - 发布于2023年，close source
   - 和中科大相关
     - <http://staff.ustc.edu.cn/~lgliu/Projects/2023_ETER/default.html>
     - <http://gcl.ustc.edu.cn/>
@@ -63,6 +64,26 @@ step中描述3d曲面造型信息，基本都是通过n个参数曲面+曲面上
     - <https://orcid.org/0009-0007-3527-6313>
     - <https://www.linkedin.com/in/cong-alex-c-3a130611/>
     - 创业在做相关的工作 Sheyun Technology(设云科技) <http://lyteflow.cn/>
+
+eter的演示视频里有显示的tessellation划分情况，每一个颜色小块是被tensorcore处理的7x7的网格：
+
+![eter demo](./eter-image.jpg)
+
+看到这个我觉得似乎并不合理：
+
+- lod过渡不连续，如果真如其说的能过保证1px的屏幕误差，那么其实有大量的部分是被过度三角化了。
+  - 对于距离非常近面积非常大的patch，似乎以整个patch为单位计算保守的细分等级是不好的做法
+- 过度三角化导致软件光栅化是必需的（小三角形太多了）
+
+---
+
+[WATER: Watertight Tessellation for Real-Time Pixel-Accurate Rendering of Large-Scale Surfaces](http://staff.ustc.edu.cn/~lgliu/Projects/2025_WATER/index.html)
+
+- 上面的改进版（似乎是同一伙人做的），发布于2025年，部分开源（shader，但是不确定是否有更新）<https://github.com/Zeng187/WATER_public>
+- 主要改进是去掉了tensor core的三角化（笑），提升了性能（还有其他一些消耗上的优化）
+- 因为不再使用tensor core，所以不再要求 7x7固定的三角化网格，所以可以在边界区实现非均匀的对齐的三角化，以实现watertight
+  - 边界区的宽度也是自适应计算的，所以实际上需要三角化的数量大幅下降（可能部分解决了上述我观察到的问题）
+  - 采用taskshader来拆分子的三角化任务
 
 <!-- [The Cone of Normals Technique for Fast Processing of Curved Patches](http://www.abiezzi.com/Salim/publications/Docs/[Cone]%20v12i3pp261-272.pdf) -->
 

@@ -71,7 +71,7 @@
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
 - 其他
-  - [step-viewer](./misc/step-viewer.md)
+  - [step-viewer](./misc/step-viewer/step-viewer.md)
   - [Rendiation 六年开发回顾](./misc/rendiation-six-years.md)
   - [远程工作的观点](./working/remote-work.md)
   - [或许你不应该将渲染器称之为渲染引擎](./working/language-corrpution.md)
