@@ -36,7 +36,7 @@
   - [关于Framegraph架构的观点](./renderer-engineering/framegraph.md)
   - [如何解决Buffer binding count 的平台限制](./renderer-engineering/how-to-workaround-binding-count-limitation.md)
   - [indirect和direct rendering的工程实现组织](./renderer-engineering/indirect-direct-rendering.md)
-  - [支持动态场景渲染器如何优化静态场景的加载性能？](./renderer-engineering/fast-static-content-load.md)
+  - [支持动态场景的渲染器如何优化静态场景的加载性能？](./renderer-engineering/fast-static-content-load.md)
   - [改进大场景渲染精度](./renderer-engineering/large-world-precision.md)
   - [场景过滤和剔除](./renderer-engineering/culling-system.md)
   - [如何排查数组访问越界导致的Device lost](./renderer-engineering/debug-device-lost.md)
