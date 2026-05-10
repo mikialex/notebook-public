@@ -70,10 +70,11 @@
   - [分析调试内存问题](./general-practice/debug-memory-issue.md)
   - [性能优化的方向](./general-practice/performance-direction.md)
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
+- project
+  - [3d-parametric-rendering](./project/3d-parametric-rendering/index.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
 - 其他
-  - [step-viewer](./misc/step-viewer/step-viewer.md)
   - [Rendiation 六年开发回顾](./misc/rendiation-six-years.md)
   - [远程工作的观点](./working/remote-work.md)
   - [或许你不应该将渲染器称之为渲染引擎](./working/language-corrpution.md)
