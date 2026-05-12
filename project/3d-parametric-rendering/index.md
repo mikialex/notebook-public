@@ -1,9 +1,9 @@
 # 3d parametric rendering
 
-实现一个3d版的[vello](https://github.com/linebender/vello)，动态的在gpu上自适应细分曲面，来解决cad场景：
+实现一个3d版的[vello](https://github.com/linebender/vello)，以某种方式直接支持3d矢量内容绘制，以在cad场景中：
 
-- 能够无限放大曲面曲线细节而不会出现传统渲染方法因为离散精度不足，而导致显示质量不佳的问题
-- 反之能够实现合理的LOD，大幅改进渲染成本，特别是在极其复杂的cad场景下具备显著性能优势
+- 解决传统方法下因为离散精度不足，在放大曲面曲线细节后显示质量不佳的问题
+- 实现合理的LOD，大幅改进渲染成本，在复杂大场景下相比传统方案具备显著性能优势
 
 ## step input
 
@@ -19,6 +19,8 @@ step是一个非常[复杂](https://www.steptools.com/stds/stp_expg/arm.html)的
 
 [foxtrot step viewer](./foxtrot-step-viewer.md)
 
+[truck](./truck.md)
+
 ## 技术路线
 
 - A 实时自适应三角化
@@ -30,3 +32,5 @@ step是一个非常[复杂](https://www.steptools.com/stds/stp_expg/arm.html)的
 - C ray tracing （not fully researched， not promising）
 
 [研究资料整理](./research.md)
+
+[开发计划](./impl-plan.md)
