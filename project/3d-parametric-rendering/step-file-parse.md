@@ -25,7 +25,7 @@ foxtrot express：
 - 理论上 foxtrot express会比ruststep快很多
   - 因为没有两阶段parse，尤其是没有第一阶段parse出动态的数据结构的性能损耗
 - foxtrot express的生成的代码编译很慢（ap214，生成单crate 4w loc，release编译，5分钟）
-  - ruststep理论上编译会快一点，但是没有测试
+  - ruststep理论上编译会快一点，但是没有测试过
   - ruststep如果用户手工的二次读取其关心的内容，而不使用schema生成的parser，那么肯定会快很多
   - ruststep可以直接生成部分express语句的parser 代码
 - ruststep的代码上看，更加“标准化”，特别的想处理好step方面的问题，scope也比foxtrot express要广

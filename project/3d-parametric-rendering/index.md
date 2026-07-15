@@ -5,6 +5,14 @@
 - 解决传统方法下因为离散精度不足，在放大曲面曲线细节后显示质量不佳的问题
 - 实现合理的LOD，大幅改进渲染成本，在复杂大场景下相比传统方案具备显著性能优势
 
+### 传统的cpu预计算mesh是否还有价值？
+
+只将优化应用于曲面/曲线的内部对于复杂大场景可能是不够的，因为场景中这些矢量图元的数量可能有几百万上千万，以至于他们本身就是类似三角形级别的数据。
+
+对于最简化的case，每一个矢量图元，只离散为quad，甚至point，也有非常大的开销。所以某种方式的场景级别lod必须存在，那么从可行性看，这种场景lod实际还是需要基于预计算的离散mesh实现。
+
+三角化应该考虑brep 拓扑，具体参考 [Topology-First B-Rep Meshing](https://arxiv.org/html/2604.02141v1), 或者 meshStep（下面step viewer有提到）的实现
+
 ## step input
 
 计划以step作为主要数据输入格式
@@ -20,6 +28,15 @@ step是一个非常[复杂](https://www.steptools.com/stds/stp_expg/arm.html)的
 [foxtrot step viewer](./foxtrot-step-viewer.md)
 
 [truck](./truck.md)
+
+### meshStep
+
+主要是基于拓扑的三角化实现
+
+- <https://github.com/CNCKitchen/meshStep> AGPL
+  - readme里有一些其他step三角化的对比
+- <https://cnckitchen.github.io/meshStep/> web example
+- <https://x.com/CNC_Kitchen/status/2077136207889227868> twitter post
 
 ## 技术路线
 
