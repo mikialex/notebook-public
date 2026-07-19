@@ -25,7 +25,11 @@ rust中特别的适用「组合」的编程方式来分解问题实现需求。�
 
 ## 相关问题链接
 
+- <https://internals.rust-lang.org/t/compiler-should-avoid-generating-very-long-type-name/23543>
+  - 这个是我发的帖子
 - <https://internals.rust-lang.org/t/exponentially-growing-impl-trait-type-names/7447/4>
+- <https://users.rust-lang.org/t/the-binary-file-compiled-by-the-cargo-debug-is-over-1-gb/92468/6>
+- <https://github.com/rust-lang/rust/issues/46034>
 - <https://github.com/rust-lang/rust/issues/72408>
 - <https://github.com/rust-lang/rust/issues/75992>
 - <https://github.com/rust-lang/rust/issues/130729>
