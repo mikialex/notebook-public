@@ -1,6 +1,6 @@
 # 减少Indirect渲染器的dispatch call数量
 
-实现gpu driven/indirect渲染器的目的之一是为了AZDO（Approaching zero driver overhead），核心原理是indirect的渲染方式使得drawcall数量几乎不再和场景的基本绘制单元数量相关。但是naive实现的indirect渲染，在特定复杂的场景下可能dispatch call的数量非常高，以至于产生严重的性能问题。所以减少dispatch call相关的优化对于实现AZDO的目标是必要的。
+实现gpu driven/indirect渲染器的目的之一是为了AZDO（Approaching zero driver overhead），核心原理是indirect的渲染方式使得drawcall数量几乎不再和场景的基本绘制单元数量相关。但是naive实现的indirect渲染，在特定复杂的场景下可能dispatch call的数量非常高，以至于产生严重的性能问题。所以减少dispatch call相关的优化对于实现AZDO的目标是必要的。因为这个原因，indirect渲染器潜在的具有很高的的固定成本（即场景规模没有上来之前，其cpu的cost远高于gles style的渲染器）
 
 ## dispatch call数量多的原因
 

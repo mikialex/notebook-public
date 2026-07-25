@@ -72,7 +72,7 @@
   - [性能优化的方向](./general-practice/performance-direction.md)
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
 - project
-  - [3d-parametric-rendering](./project/3d-parametric-rendering/index.md)
+  - [3D parametric surface & curve rendering](./project/3d-parametric-rendering/index.md)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
 - 其他
