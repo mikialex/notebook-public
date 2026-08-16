@@ -73,6 +73,8 @@
   - [Semantic log level 规范](./general-practice/semantic-log-level.md)
 - project
   - [3D parametric surface & curve rendering](./project/3d-parametric-rendering/index.md)
+  - [Inside Rendiation]
+    - [Mesh Shader 集成细节备忘](./project/rendiation-framework/)
 - open question
   - [符号计算的优化想法](./misc/symbolic-compute.md)
 - 其他
